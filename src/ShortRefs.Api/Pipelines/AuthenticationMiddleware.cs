@@ -1,6 +1,7 @@
 ﻿namespace ShortRefs.Api.Pipelines
 {
     using System;
+    using System.Net;
     using System.Security.Principal;
     using System.Threading.Tasks;
 
@@ -9,7 +10,7 @@
     using ShortRefs.Api.Models;
     using ShortRefs.Domain.Models.Users;
 
-    public class AuthenticationMiddleware
+    internal sealed class AuthenticationMiddleware
     {
         private readonly RequestDelegate next;
 
@@ -20,8 +21,34 @@
 
         public async Task Invoke(HttpContext httpContext)
         {
-            var identity = new UserIdentity(new User(Guid.NewGuid()), "Cookie");
+            User user;
+            if (!httpContext.Request.Cookies.TryGetValue("UserIdCookie", out var userId))
+            {
+                var newUserId = Guid.NewGuid();
+                userId = newUserId.ToString();
+                user = new User(newUserId);
+            }
+            else
+            {
+                if (!Guid.TryParse(userId, out var existingUserId))
+                {
+                    httpContext.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                    return;
+                }
+
+                user = new User(existingUserId);
+            }
+
+            var identity = new UserIdentity(user, "Cookie");
             httpContext.User = new GenericPrincipal(identity, Array.Empty<string>());
+
+            httpContext.Response.Cookies.Append(
+                "UserIdCookie",
+                userId,
+                new CookieOptions
+                {
+                    Expires = DateTimeOffset.Now.AddMonths(1)
+                });
 
             await this.next(httpContext);
         }

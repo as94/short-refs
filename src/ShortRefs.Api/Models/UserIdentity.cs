@@ -5,7 +5,7 @@
 
     using ShortRefs.Domain.Models.Users;
 
-    public sealed class UserIdentity : IIdentity
+    internal sealed class UserIdentity : IIdentity
     {
         public UserIdentity(User user, string authenticationType)
         {
