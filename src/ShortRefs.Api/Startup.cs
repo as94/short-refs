@@ -31,7 +31,7 @@
 
             app.UseMvc(routes =>
             {
-                routes.MapRoute(name: "default", template: "{Controller=Reference}/{Action=GetUserReferencesAsync}/{id?}");
+                routes.MapRoute(name: "default", template: "{Controller=Reference}/{Action=GetMyReferenceStatAsync}/{id?}");
             });
         }
     }

@@ -1,10 +1,13 @@
 ﻿namespace ShortRefs.Api.Controllers
 {
+    using System.ComponentModel.DataAnnotations;
     using System.Linq;
     using System.Threading.Tasks;
 
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
+
+    using ShortRefs.Api.ClientModels;
 
     [Authorize]
     [Route("")]
@@ -19,15 +22,40 @@
         };
 
         [HttpGet]
-        [Route("")]
-        [Route("my")]
-        public async Task<IActionResult> GetUserReferencesAsync()
+        public async Task<IActionResult> GetMyReferenceStatAsync()
         {
             var host = this.HttpContext.Request.Host.Value;
         
-            var result = TestRefs.Select(r => $"{host}/{r}");
+            var viewModels = new ReferenceStatList
+            {
+                Items =
+                    TestRefs.Select(
+                        r => new ReferenceStatItem
+                        {
+                            Original = $"{host}/{r}{r}{r}",
+                            Short = $"{host}/{r}",
+                            RedirectsCount = 0
+                        })
+                    .ToArray()
+            };
         
-            return this.Ok(result);
+            return this.Ok(viewModels);
+        }
+
+        // TODO: redirect
+        [HttpGet]
+        [Route("{shortReference}")]
+        public async Task<IActionResult> GetReferenceAsync([Required]string shortReference)
+        {
+            // increment count
+
+            return this.Ok();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateReferenceAsync([Required][FromBody]ReferenceCreate reference)
+        {
+            return this.Ok();
         }
     }
 }
