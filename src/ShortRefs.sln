@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.168
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShortRefs.Domain", "ShortRefs.Domain\ShortRefs.Domain.csproj", "{65AEC744-3C3D-4C14-9E79-302939BEFFBF}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShortRefs.Api", "ShortRefs.Api\ShortRefs.Api.csproj", "{23DB7DEA-E0CA-4ECD-9229-A81AC5C5D436}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{65AEC744-3C3D-4C14-9E79-302939BEFFBF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{65AEC744-3C3D-4C14-9E79-302939BEFFBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{65AEC744-3C3D-4C14-9E79-302939BEFFBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{65AEC744-3C3D-4C14-9E79-302939BEFFBF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{23DB7DEA-E0CA-4ECD-9229-A81AC5C5D436}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{23DB7DEA-E0CA-4ECD-9229-A81AC5C5D436}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{23DB7DEA-E0CA-4ECD-9229-A81AC5C5D436}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{23DB7DEA-E0CA-4ECD-9229-A81AC5C5D436}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7DF75220-68DB-454E-9240-A6DB2397D30A}
+	EndGlobalSection
+EndGlobal
