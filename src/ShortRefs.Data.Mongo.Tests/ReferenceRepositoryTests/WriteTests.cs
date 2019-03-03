@@ -14,10 +14,10 @@
         [Fact]
         public async Task CreateTest()
         {
-            var id = 0;
+            var id = this.NewId();
             var reference = Reference.CreateNew(id, "https://docs.microsoft.com", x => this.ReferenceEncoder.Encode(x));
 
-            await this.ReferenceRepository.CreateAsync(reference);
+            await this.ReferenceRepository.CreateAsync(reference, CancellationToken.None);
 
             var expected = reference;
             var actual = await this.ReferenceRepository.GetAsync(id, CancellationToken.None);
@@ -28,14 +28,14 @@
         [Fact]
         public async Task UpdateTest()
         {
-            var id = 0;
+            var id = this.NewId();
             var reference = Reference.CreateNew(id, "https://docs.microsoft.com", x => this.ReferenceEncoder.Encode(x));
 
-            await this.ReferenceRepository.CreateAsync(reference);
+            await this.ReferenceRepository.CreateAsync(reference, CancellationToken.None);
 
             reference.IncrementRedirects();
 
-            await this.ReferenceRepository.UpdateAsync(reference);
+            await this.ReferenceRepository.UpdateAsync(reference, CancellationToken.None);
 
             var expected = reference;
             var actual = await this.ReferenceRepository.GetAsync(id, CancellationToken.None);
@@ -46,12 +46,12 @@
         [Fact]
         public async Task DeleteTest()
         {
-            var id = 0;
+            var id = this.NewId();
             var reference = Reference.CreateNew(id, "https://docs.microsoft.com", x => this.ReferenceEncoder.Encode(x));
 
-            await this.ReferenceRepository.CreateAsync(reference);
+            await this.ReferenceRepository.CreateAsync(reference, CancellationToken.None);
 
-            await this.ReferenceRepository.DeleteAsync(reference);
+            await this.ReferenceRepository.DeleteAsync(reference, CancellationToken.None);
 
             var actual = await this.ReferenceRepository.GetAsync(id, CancellationToken.None);
             actual.Should().BeNull();

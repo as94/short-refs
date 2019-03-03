@@ -6,7 +6,7 @@
     internal sealed class Reference
     {
         [BsonId]
-        public int Id { get; set; }
+        public long Id { get; set; }
 
         [BsonElement("original")]
         public string Original { get; set; }
@@ -15,6 +15,6 @@
         public string Short { get; set; }
 
         [BsonElement("redirectsCount")]
-        public int RedirectsCount { get; set; }
+        public long RedirectsCount { get; set; }
     }
 }

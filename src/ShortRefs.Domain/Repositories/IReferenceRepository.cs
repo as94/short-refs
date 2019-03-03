@@ -5,20 +5,21 @@
     using System.Threading.Tasks;
 
     using ShortRefs.Domain.Models.References;
-    using ShortRefs.Domain.Models.Users;
 
     public interface IReferenceRepository
     {
-        Task<Reference> GetAsync(int id, CancellationToken cancellationToken);
+        Task<Reference> GetAsync(long id, CancellationToken cancellationToken);
 
         Task<Reference> FirstOrDefaultAsync(ReferenceQuery query, CancellationToken cancellationToken);
 
         Task<IReadOnlyCollection<Reference>> FindAsync(ReferenceQuery query, CancellationToken cancellationToken);
 
-        Task CreateAsync(Reference reference);
+        Task CreateAsync(Reference reference, CancellationToken cancellationToken);
 
-        Task UpdateAsync(Reference reference);
+        Task UpdateAsync(Reference reference, CancellationToken cancellationToken);
 
-        Task DeleteAsync(Reference reference);
+        Task DeleteAsync(Reference reference, CancellationToken cancellationToken);
+
+        Task<long> CountAsync(CancellationToken cancellationToken);
     }
 }

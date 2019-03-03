@@ -33,7 +33,7 @@ namespace ShortRefs.Data.Mongo.Repositories
             this.CreateIndexes();
         }
 
-        public async Task<Reference> GetAsync(int id, CancellationToken cancellationToken)
+        public async Task<Reference> GetAsync(long id, CancellationToken cancellationToken)
         {
             var model = await this.references.Find(r => r.Id == id)
                             .FirstOrDefaultAsync(cancellationToken);
@@ -81,7 +81,7 @@ namespace ShortRefs.Data.Mongo.Repositories
                 .AsReadOnly();
         }
 
-        public async Task CreateAsync(Reference reference)
+        public async Task CreateAsync(Reference reference, CancellationToken cancellationToken)
         {
             if (reference == null)
             {
@@ -96,10 +96,10 @@ namespace ShortRefs.Data.Mongo.Repositories
                 RedirectsCount = reference.RedirectsCount
             };
 
-            await this.references.InsertOneAsync(model);
+            await this.references.InsertOneAsync(model, cancellationToken: cancellationToken);
         }
 
-        public async Task UpdateAsync(Reference reference)
+        public async Task UpdateAsync(Reference reference, CancellationToken cancellationToken)
         {
             if (reference == null)
             {
@@ -114,17 +114,22 @@ namespace ShortRefs.Data.Mongo.Repositories
                 RedirectsCount = reference.RedirectsCount
             };
 
-            await this.references.ReplaceOneAsync(r => r.Id == model.Id, model);
+            await this.references.ReplaceOneAsync(r => r.Id == model.Id, model, cancellationToken: cancellationToken);
         }
 
-        public async Task DeleteAsync(Reference reference)
+        public async Task DeleteAsync(Reference reference, CancellationToken cancellationToken)
         {
             if (reference == null)
             {
                 throw new ArgumentNullException(nameof(reference));
             }
 
-            await this.references.DeleteOneAsync(r => r.Id == reference.Id);
+            await this.references.DeleteOneAsync(r => r.Id == reference.Id, cancellationToken);
+        }
+
+        public async Task<long> CountAsync(CancellationToken cancellationToken)
+        {
+            return await this.references.CountDocumentsAsync(new BsonDocument(), cancellationToken: cancellationToken);
         }
 
         private static FilterDefinition<Models.Reference> GetFilter(ReferenceQuery query)

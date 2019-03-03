@@ -1,27 +1,52 @@
 ﻿namespace ShortRefs.Api.Controllers
 {
-    using System;
     using System.ComponentModel.DataAnnotations;
+    using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
 
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
 
     using ShortRefs.Api.ClientModels;
+    using ShortRefs.Domain.Models.References;
+    using ShortRefs.Domain.Repositories;
+    using ShortRefs.Domain.Services;
 
     [Authorize]
     [Route("")]
     [Route("references")]
     public class ReferenceController : Controller
     {
-        [HttpGet]
-        public async Task<IActionResult> GetMyReferenceStatAsync()
+        private readonly IReferenceRepository referenceRepository;
+        private readonly IReferenceEncoder referenceEncoder;
+
+        private long lastReferenceId;
+
+        public ReferenceController(IReferenceRepository referenceRepository, IReferenceEncoder referenceEncoder)
         {
-            //var host = this.HttpContext.Request.Host.Value;
-        
+            this.referenceRepository = referenceRepository;
+            this.referenceEncoder = referenceEncoder;
+
+            var count = this.referenceRepository.CountAsync(CancellationToken.None).Result;
+            Interlocked.Add(ref this.lastReferenceId, count);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetReferenceStatAsync(CancellationToken cancellationToken)
+        {
+            var references = await this.referenceRepository.FindAsync(new ReferenceQuery(), cancellationToken);
+
             var viewModels = new ReferenceStatList
             {
-                Items = Array.Empty<ReferenceStatItem>()
+                Items = references.Select(
+                    r => new ReferenceStatItem
+                    {
+                        Original = r.Original,
+                        Short = r.Short,
+                        RedirectsCount = r.RedirectsCount
+                    })
+                .ToArray()
             };
         
             return this.Ok(viewModels);
@@ -29,24 +54,53 @@
 
         [HttpGet]
         [Route("{shortReference}")]
-        public async Task<IActionResult> RedirectByOriginalReferenceAsync([Required]string shortReference)
+        public async Task<IActionResult> RedirectByOriginalReferenceAsync([Required]string shortReference, CancellationToken cancellationToken)
         {
-            // var originalReference = await this.userReferenceService.GetOriginalReferenceAsync(shortReference);
-            //
-            // if (originalReference == null)
-            // {
-            //     return this.BadRequest($"Bad short reference = '{shortReference}'");
-            // }
+            var id = this.referenceEncoder.Decode(shortReference);
+            var reference = await this.referenceRepository.GetAsync(id, cancellationToken);
 
-            var originalReference = shortReference;
+            if (reference == null)
+            {
+                return this.NotFound(shortReference);
+            }
 
-            return this.LocalRedirect(originalReference);
+            reference.IncrementRedirects();
+            await this.referenceRepository.UpdateAsync(reference, cancellationToken);
+
+            return this.Redirect(reference.Original);
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateReferenceAsync([Required][FromBody]ReferenceCreate reference)
+        public async Task<IActionResult> CreateReferenceAsync([Required][FromBody]ReferenceCreate referenceCreate, CancellationToken cancellationToken)
         {
-            return this.Ok();
+            // TODO: lock
+
+            var existingReference = await this.referenceRepository.FirstOrDefaultAsync(
+                new ReferenceQuery(referenceCreate.Reference),
+                cancellationToken);
+
+            if (existingReference != null)
+            {
+                return this.BadRequest($"The reference '{referenceCreate.Reference}' already exists");
+            }
+
+            Interlocked.Increment(ref this.lastReferenceId);
+
+            var reference =
+                Reference.CreateNew(
+                    this.lastReferenceId,
+                    referenceCreate.Reference,
+                    x => this.referenceEncoder.Encode(x));
+
+            await this.referenceRepository.CreateAsync(reference, cancellationToken);
+
+            var viewModel = new ReferenceCreateResult
+            {
+                Original = reference.Original,
+                Short = reference.Short
+            };
+
+            return this.Ok(viewModel);
         }
     }
 }

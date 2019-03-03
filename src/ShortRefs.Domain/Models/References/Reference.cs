@@ -1,10 +1,13 @@
 ﻿namespace ShortRefs.Domain.Models.References
 {
     using System;
+    using System.Threading;
 
     public sealed class Reference
     {
-        private Reference(int id, string original, string shortRef, int redirectsCount)
+        private long redirectsCount;
+
+        private Reference(long id, string original, string shortRef, long redirectsCount)
         {
             if (id < 0)
             {
@@ -34,30 +37,30 @@
             this.Id = id;
             this.Original = original;
             this.Short = shortRef;
-            this.RedirectsCount = redirectsCount;
+            this.redirectsCount = redirectsCount;
         }
 
-        public static Reference CreateNew(int id, string original, Func<int, string> encodeFunc)
+        public static Reference CreateNew(long id, string original, Func<long, string> encodeFunc)
         {
             return new Reference(id, original, encodeFunc(id), 0);
         }
 
-        public static Reference GetExisting(int id, string original, string shortRef, int redirectsCount)
+        public static Reference GetExisting(long id, string original, string shortRef, long redirectsCount)
         {
             return new Reference(id, original, shortRef, redirectsCount);
         }
 
-        public int Id { get; }
+        public long Id { get; }
 
         public string Original { get; }
 
         public string Short { get; }
 
-        public int RedirectsCount { get; private set; }
+        public long RedirectsCount => this.redirectsCount;
 
         public void IncrementRedirects()
         {
-            RedirectsCount++;
+            Interlocked.Increment(ref redirectsCount);
         }
     }
 }

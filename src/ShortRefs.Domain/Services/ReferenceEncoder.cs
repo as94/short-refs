@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("ShortRefs.Data.Mongo.Tests")]
 
-namespace ShortRefs.Domain.Models.References
+namespace ShortRefs.Domain.Services
 {
     using System;
     using System.Text;
@@ -28,7 +28,7 @@ namespace ShortRefs.Domain.Models.References
             this.alphabetBase = this.alphabet.Length;
         }
 
-        public string Encode(int id)
+        public string Encode(long id)
         {
             if (id == 0)
             {
@@ -39,16 +39,17 @@ namespace ShortRefs.Domain.Models.References
 
             while (id > 0)
             {
-                sb.Insert(0, this.alphabet[id % this.alphabetBase]);
+                long index = id % this.alphabetBase;
+                sb.Insert(0, this.alphabet[(int)index]);
                 id /= this.alphabetBase;
             }
 
             return sb.ToString();
         }
 
-        public int Decode(string str)
+        public long Decode(string str)
         {
-            var id = 0;
+            long id = 0;
 
             foreach (var c in str)
             {
