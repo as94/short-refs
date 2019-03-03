@@ -3,6 +3,8 @@
     using System;
     using System.Collections.Generic;
 
+    using ShortRefs.Domain.Models.References;
+
     public sealed class User
     {
         public User(Guid id)

@@ -4,14 +4,11 @@
 
     public sealed class ReferenceQuery
     {
-        public ReferenceQuery(Guid? userId = null, string shortReference = null)
+        public ReferenceQuery(string originalReference = null)
         {
-            this.UserId = userId;
-            this.ShortReference = shortReference;
+            this.OriginalReference = originalReference;
         }
 
-        public Guid? UserId { get; }
-
-        public string ShortReference { get; }
+        public string OriginalReference { get; }
     }
 }

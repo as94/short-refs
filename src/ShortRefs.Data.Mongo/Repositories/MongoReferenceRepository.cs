@@ -1,74 +1,84 @@
-﻿namespace ShortRefs.Data.Mongo.Repositories
+﻿using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("ShortRefs.Data.Mongo.Tests")]
+
+namespace ShortRefs.Data.Mongo.Repositories
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
 
     using MongoDB.Bson;
     using MongoDB.Driver;
 
     using ShortRefs.Domain.Models.References;
-    using ShortRefs.Domain.Models.Users;
     using ShortRefs.Domain.Repositories;
 
-    // TODO: add tests
     internal sealed class MongoReferenceRepository : IReferenceRepository
     {
         private readonly IMongoCollection<Models.Reference> references;
 
-        public MongoReferenceRepository(string connectionString)
+        public MongoReferenceRepository(IMongoClient mongoClient)
         {
-            if (connectionString == null)
+            if (mongoClient == null)
             {
-                throw new ArgumentNullException(nameof(connectionString));
+                throw new ArgumentNullException(nameof(mongoClient));
             }
 
-            var client = new MongoClient(connectionString);
-            var database = client.GetDatabase("ReferenceDb");
+            var database = mongoClient.GetDatabase("ReferenceDb");
             this.references = database.GetCollection<Models.Reference>("references");
 
             this.CreateIndexes();
         }
 
-        public async Task<Reference> GetAsync(int id)
+        public async Task<Reference> GetAsync(int id, CancellationToken cancellationToken)
         {
-            var model = await this.references.Find(new BsonDocument("_id", new ObjectId(id.ToString()))).FirstOrDefaultAsync();
+            var model = await this.references.Find(r => r.Id == id)
+                            .FirstOrDefaultAsync(cancellationToken);
 
             if (model == null)
             {
                 return null;
             }
 
-            return Reference.GetExisting(model.Id, model.Original, model.Short, model.RedirectsCount, model.UserId);
+            return Reference.GetExisting(model.Id, model.Original, model.Short, model.RedirectsCount);
         }
 
-        public async Task<Reference> FirstOrDefaultAsync(ReferenceQuery query)
+        public async Task<Reference> FirstOrDefaultAsync(ReferenceQuery query, CancellationToken cancellationToken)
         {
             if (query == null)
             {
                 throw new ArgumentNullException(nameof(query));
             }
 
-            var builder = new FilterDefinitionBuilder<Models.Reference>();
-            var filter = builder.Empty;
-
-            if (query.UserId != null)
-            {
-                filter = filter & builder.Eq(new StringFieldDefinition<Models.Reference, Guid>("userId"), query.UserId.Value);
-            }
-
-            if (!string.IsNullOrWhiteSpace(query.ShortReference))
-            {
-                filter = filter & builder.Regex("short", new BsonRegularExpression(query.ShortReference));
-            }
-
-            var model = await this.references.Find(filter).FirstOrDefaultAsync();
+            var filter = GetFilter(query);
+            var model = await this.references.Find(filter)
+                            .FirstOrDefaultAsync(cancellationToken);
 
             if (model == null)
             {
                 return null;
             }
 
-            return Reference.GetExisting(model.Id, model.Original, model.Short, model.RedirectsCount, model.UserId);
+            return Reference.GetExisting(model.Id, model.Original, model.Short, model.RedirectsCount);
+        }
+
+        public async Task<IReadOnlyCollection<Reference>> FindAsync(ReferenceQuery query, CancellationToken cancellationToken)
+        {
+            if (query == null)
+            {
+                throw new ArgumentNullException(nameof(query));
+            }
+
+            var filter = GetFilter(query);
+            var models = await this.references.Find(filter).ToListAsync(cancellationToken);
+
+            return models
+                .Select(model => Reference.GetExisting(model.Id, model.Original, model.Short, model.RedirectsCount))
+                .ToList()
+                .AsReadOnly();
         }
 
         public async Task CreateAsync(Reference reference)
@@ -83,8 +93,7 @@
                 Id = reference.Id,
                 Original = reference.Original,
                 Short = reference.Short,
-                RedirectsCount = reference.RedirectsCount,
-                UserId = reference.OwnerId
+                RedirectsCount = reference.RedirectsCount
             };
 
             await this.references.InsertOneAsync(model);
@@ -102,11 +111,10 @@
                 Id = reference.Id,
                 Original = reference.Original,
                 Short = reference.Short,
-                RedirectsCount = reference.RedirectsCount,
-                UserId = reference.OwnerId
+                RedirectsCount = reference.RedirectsCount
             };
 
-            await this.references.ReplaceOneAsync(new BsonDocument("_id", new ObjectId(reference.Id.ToString())), model);
+            await this.references.ReplaceOneAsync(r => r.Id == model.Id, model);
         }
 
         public async Task DeleteAsync(Reference reference)
@@ -116,20 +124,34 @@
                 throw new ArgumentNullException(nameof(reference));
             }
 
-            await this.references.DeleteOneAsync(new BsonDocument("_id", new ObjectId(reference.Id.ToString())));
+            await this.references.DeleteOneAsync(r => r.Id == reference.Id);
+        }
+
+        private static FilterDefinition<Models.Reference> GetFilter(ReferenceQuery query)
+        {
+            var builder = new FilterDefinitionBuilder<Models.Reference>();
+            var filter = builder.Empty;
+
+            // if (query.UserId != null)
+            // {
+            //     filter = filter & builder.Eq(new StringFieldDefinition<Models.Reference, Guid>("userId"), query.UserId.Value);
+            // }
+
+            if (!string.IsNullOrWhiteSpace(query.OriginalReference))
+            {
+                filter = filter & builder.Regex("original", new BsonRegularExpression(query.OriginalReference));
+            }
+
+            return filter;
         }
 
         private void CreateIndexes()
         {
-            var userIdIndex = new CreateIndexModel<Models.Reference>(
-                Builders<Models.Reference>.IndexKeys.Ascending(x => x.UserId));
+            var originalReferenceIndex = new CreateIndexModel<Models.Reference>(
+                Builders<Models.Reference>.IndexKeys.Ascending(x => x.Original),
+                new CreateIndexOptions { Unique = true });
 
-            this.references.Indexes.CreateOne(userIdIndex);
-
-            var shortReferenceIndex = new CreateIndexModel<Models.Reference>(
-                Builders<Models.Reference>.IndexKeys.Ascending(x => x.Short));
-
-            this.references.Indexes.CreateOne(shortReferenceIndex);
+            this.references.Indexes.CreateOne(originalReferenceIndex);
         }
     }
 }

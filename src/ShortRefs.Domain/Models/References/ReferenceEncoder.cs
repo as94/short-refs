@@ -1,10 +1,15 @@
-﻿namespace ShortRefs.Domain.Models.References
+﻿
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("ShortRefs.Data.Mongo.Tests")]
+
+namespace ShortRefs.Domain.Models.References
 {
     using System;
     using System.Text;
 
     // TODO: add tests
-    // idea: https://stackoverflow.com/questions/742013/how-do-i-create-a-url-shortener/742047#742047
+    // idea from here: https://stackoverflow.com/questions/742013/how-do-i-create-a-url-shortener/742047#742047
     internal sealed class ReferenceEncoder : IReferenceEncoder
     {
         public static readonly string DefaultAlphabet = "abcdefghijklmnopqrstuvwxyz0123456789";

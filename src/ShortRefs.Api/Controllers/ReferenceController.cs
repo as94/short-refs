@@ -27,12 +27,16 @@
             return this.Ok(viewModels);
         }
 
-        // TODO: redirect
         [HttpGet]
         [Route("{shortReference}")]
         public async Task<IActionResult> RedirectByOriginalReferenceAsync([Required]string shortReference)
         {
-            // increment count
+            // var originalReference = await this.userReferenceService.GetOriginalReferenceAsync(shortReference);
+            //
+            // if (originalReference == null)
+            // {
+            //     return this.BadRequest($"Bad short reference = '{shortReference}'");
+            // }
 
             var originalReference = shortReference;
 
