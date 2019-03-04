@@ -19,17 +19,14 @@
     public class ReferenceController : Controller
     {
         private readonly IReferenceRepository referenceRepository;
-        private readonly IReferenceEncoder referenceEncoder;
+        private readonly IReferenceService referenceService;
 
-        private long lastReferenceId;
-
-        public ReferenceController(IReferenceRepository referenceRepository, IReferenceEncoder referenceEncoder)
+        public ReferenceController(
+            IReferenceRepository referenceRepository,
+            IReferenceService referenceService)
         {
             this.referenceRepository = referenceRepository;
-            this.referenceEncoder = referenceEncoder;
-
-            var count = this.referenceRepository.CountAsync(CancellationToken.None).Result;
-            Interlocked.Add(ref this.lastReferenceId, count);
+            this.referenceService = referenceService;
         }
 
         [HttpGet]
@@ -54,27 +51,20 @@
 
         [HttpGet]
         [Route("{shortReference}")]
-        public async Task<IActionResult> RedirectByOriginalReferenceAsync([Required]string shortReference, CancellationToken cancellationToken)
+        public async Task<IActionResult> RedirectByShortReferenceAsync([Required]string shortReference, CancellationToken cancellationToken)
         {
-            var id = this.referenceEncoder.Decode(shortReference);
-            var reference = await this.referenceRepository.GetAsync(id, cancellationToken);
-
+            var reference = await this.referenceService.GetOriginalReferenceAsync(shortReference, cancellationToken);
             if (reference == null)
             {
                 return this.NotFound(shortReference);
             }
 
-            reference.IncrementRedirects();
-            await this.referenceRepository.UpdateAsync(reference, cancellationToken);
-
-            return this.Redirect(reference.Original);
+            return this.Redirect(reference);
         }
 
         [HttpPost]
         public async Task<IActionResult> CreateReferenceAsync([Required][FromBody]ReferenceCreate referenceCreate, CancellationToken cancellationToken)
         {
-            // TODO: lock
-
             var existingReference = await this.referenceRepository.FirstOrDefaultAsync(
                 new ReferenceQuery(referenceCreate.Reference),
                 cancellationToken);
@@ -84,15 +74,7 @@
                 return this.BadRequest($"The reference '{referenceCreate.Reference}' already exists");
             }
 
-            Interlocked.Increment(ref this.lastReferenceId);
-
-            var reference =
-                Reference.CreateNew(
-                    this.lastReferenceId,
-                    referenceCreate.Reference,
-                    x => this.referenceEncoder.Encode(x));
-
-            await this.referenceRepository.CreateAsync(reference, cancellationToken);
+            var reference = await this.referenceService.CreateReferenceAsync(referenceCreate.Reference, cancellationToken);
 
             var viewModel = new ReferenceCreateResult
             {

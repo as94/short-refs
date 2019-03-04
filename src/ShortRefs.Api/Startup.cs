@@ -8,6 +8,7 @@
     using ShortRefs.Api.Pipelines;
     using ShortRefs.Data.Mongo.Registries;
     using ShortRefs.Domain.Registries;
+    using ShortRefs.Domain.Repositories;
 
     public class Startup
     {
@@ -15,6 +16,7 @@
         {
             // TODO: from config
             services.RegisterMongo("mongodb://localhost:27017");
+            services.RegisterCounters();
             services.RegisterReferences();
             services.RegisterReferenceEncoder();
 
@@ -25,6 +27,10 @@
                     options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
                     options.SerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
                 });
+
+            var serviceProvider = services.BuildServiceProvider();
+            var sequenceCounterRepository = serviceProvider.GetService<ISequenceCounterRepository>();
+            sequenceCounterRepository.CreateIfNotExists("referenceId");
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
