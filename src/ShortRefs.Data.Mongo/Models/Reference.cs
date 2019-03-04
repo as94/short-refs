@@ -1,5 +1,7 @@
 ﻿namespace ShortRefs.Data.Mongo.Models
 {
+    using System;
+
     using MongoDB.Bson;
     using MongoDB.Bson.Serialization.Attributes;
 
@@ -16,5 +18,8 @@
 
         [BsonElement("redirectsCount")]
         public long RedirectsCount { get; set; }
+
+        [BsonElement("userId")]
+        public Guid UserId { get; set; }
     }
 }

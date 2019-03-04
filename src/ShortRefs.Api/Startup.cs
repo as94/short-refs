@@ -3,6 +3,7 @@
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
 
     using ShortRefs.Api.Pipelines;
@@ -12,10 +13,18 @@
 
     public class Startup
     {
+        private readonly IConfiguration configuration;
+
+        public Startup(IConfiguration configuration)
+        {
+            this.configuration = configuration;
+        }
+
         public void ConfigureServices(IServiceCollection services)
         {
-            // TODO: from config
-            services.RegisterMongo("mongodb://localhost:27017");
+            var mongoConnectionString = this.configuration.GetConnectionString("ReferenceDb");
+
+            services.RegisterMongo(mongoConnectionString);
             services.RegisterCounters();
             services.RegisterReferences();
             services.RegisterReferenceEncoder();
@@ -41,6 +50,7 @@
             }
 
             app.UseMiddleware<AuthenticationMiddleware>();
+            app.UseMiddleware<ErrorHandlingMiddleware>();
 
             app.UseMvc(routes =>
             {

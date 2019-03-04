@@ -4,7 +4,7 @@
 
     public sealed class Reference
     {
-        private Reference(long id, string original, string shortRef, long redirectsCount)
+        private Reference(long id, string original, string shortRef, long redirectsCount, Guid ownerId)
         {
             if (id < 0)
             {
@@ -35,16 +35,17 @@
             this.Original = original;
             this.Short = shortRef;
             this.RedirectsCount = redirectsCount;
+            this.OwnerId = ownerId;
         }
 
-        public static Reference CreateNew(long newId, string original, Func<long, string> encodeFunc)
+        public static Reference CreateNew(long newId, string original, Func<long, string> encodeFunc, Guid ownerId)
         {
-            return new Reference(newId, original, encodeFunc(newId), 0);
+            return new Reference(newId, original, encodeFunc(newId), 0, ownerId);
         }
 
-        public static Reference GetExisting(long id, string original, string shortRef, long redirectsCount)
+        public static Reference GetExisting(long id, string original, string shortRef, long redirectsCount, Guid ownerId)
         {
-            return new Reference(id, original, shortRef, redirectsCount);
+            return new Reference(id, original, shortRef, redirectsCount, ownerId);
         }
 
         public long Id { get; }
@@ -54,6 +55,8 @@
         public string Short { get; }
 
         public long RedirectsCount { get; private set; }
+
+        public Guid OwnerId { get; }
 
         public void IncrementRedirects()
         {

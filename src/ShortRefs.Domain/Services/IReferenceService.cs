@@ -1,6 +1,6 @@
 ﻿namespace ShortRefs.Domain.Services
 {
-    using System.Collections.Generic;
+    using System;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -8,10 +8,8 @@
 
     public interface IReferenceService
     {
-        Task<IReadOnlyCollection<Reference>> FindAsync(ReferenceQuery query, CancellationToken cancellationToken);
-
         Task<string> GetOriginalReferenceAsync(string shortReference, CancellationToken cancellationToken);
 
-        Task<Reference> CreateReferenceAsync(string originalReference, CancellationToken cancellationToken);
+        Task<Reference> CreateReferenceAsync(string originalReference, Guid ownerId, CancellationToken cancellationToken);
     }
 }

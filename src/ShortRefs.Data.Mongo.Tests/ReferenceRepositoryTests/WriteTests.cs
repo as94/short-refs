@@ -1,5 +1,6 @@
 ﻿namespace ShortRefs.Data.Mongo.Tests.ReferenceRepositoryTests
 {
+    using System;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -15,7 +16,7 @@
         public async Task CreateTest()
         {
             var id = this.NewId();
-            var reference = Reference.CreateNew(id, "https://docs.microsoft.com", x => this.ReferenceEncoder.Encode(x));
+            var reference = Reference.CreateNew(id, "https://docs.microsoft.com", x => this.ReferenceEncoder.Encode(x), Guid.NewGuid());
 
             await this.ReferenceRepository.CreateAsync(reference, CancellationToken.None);
 
@@ -29,7 +30,7 @@
         public async Task UpdateTest()
         {
             var id = this.NewId();
-            var reference = Reference.CreateNew(id, "https://docs.microsoft.com", x => this.ReferenceEncoder.Encode(x));
+            var reference = Reference.CreateNew(id, "https://docs.microsoft.com", x => this.ReferenceEncoder.Encode(x), Guid.NewGuid());
 
             await this.ReferenceRepository.CreateAsync(reference, CancellationToken.None);
 
@@ -47,7 +48,7 @@
         public async Task DeleteTest()
         {
             var id = this.NewId();
-            var reference = Reference.CreateNew(id, "https://docs.microsoft.com", x => this.ReferenceEncoder.Encode(x));
+            var reference = Reference.CreateNew(id, "https://docs.microsoft.com", x => this.ReferenceEncoder.Encode(x), Guid.NewGuid());
 
             await this.ReferenceRepository.CreateAsync(reference, CancellationToken.None);
 

@@ -43,7 +43,7 @@ namespace ShortRefs.Data.Mongo.Repositories
                 return null;
             }
 
-            return Reference.GetExisting(model.Id, model.Original, model.Short, model.RedirectsCount);
+            return Reference.GetExisting(model.Id, model.Original, model.Short, model.RedirectsCount, model.UserId);
         }
 
         public async Task<Reference> FirstOrDefaultAsync(ReferenceQuery query, CancellationToken cancellationToken)
@@ -62,7 +62,7 @@ namespace ShortRefs.Data.Mongo.Repositories
                 return null;
             }
 
-            return Reference.GetExisting(model.Id, model.Original, model.Short, model.RedirectsCount);
+            return Reference.GetExisting(model.Id, model.Original, model.Short, model.RedirectsCount, model.UserId);
         }
 
         public async Task<IReadOnlyCollection<Reference>> FindAsync(ReferenceQuery query, CancellationToken cancellationToken)
@@ -76,7 +76,7 @@ namespace ShortRefs.Data.Mongo.Repositories
             var models = await this.references.Find(filter).ToListAsync(cancellationToken);
 
             return models
-                .Select(model => Reference.GetExisting(model.Id, model.Original, model.Short, model.RedirectsCount))
+                .Select(model => Reference.GetExisting(model.Id, model.Original, model.Short, model.RedirectsCount, model.UserId))
                 .ToList()
                 .AsReadOnly();
         }
@@ -93,7 +93,8 @@ namespace ShortRefs.Data.Mongo.Repositories
                 Id = reference.Id,
                 Original = reference.Original,
                 Short = reference.Short,
-                RedirectsCount = reference.RedirectsCount
+                RedirectsCount = reference.RedirectsCount,
+                UserId = reference.OwnerId
             };
 
             await this.references.InsertOneAsync(model, cancellationToken: cancellationToken);
@@ -111,7 +112,8 @@ namespace ShortRefs.Data.Mongo.Repositories
                 Id = reference.Id,
                 Original = reference.Original,
                 Short = reference.Short,
-                RedirectsCount = reference.RedirectsCount
+                RedirectsCount = reference.RedirectsCount,
+                UserId = reference.OwnerId
             };
 
             await this.references.ReplaceOneAsync(r => r.Id == model.Id, model, cancellationToken: cancellationToken);
@@ -137,10 +139,10 @@ namespace ShortRefs.Data.Mongo.Repositories
             var builder = new FilterDefinitionBuilder<Models.Reference>();
             var filter = builder.Empty;
 
-            // if (query.UserId != null)
-            // {
-            //     filter = filter & builder.Eq(new StringFieldDefinition<Models.Reference, Guid>("userId"), query.UserId.Value);
-            // }
+            if (query.UserId != null)
+            {
+                filter = filter & builder.Eq(new StringFieldDefinition<Models.Reference, Guid>("userId"), query.UserId.Value);
+            }
 
             if (!string.IsNullOrWhiteSpace(query.OriginalReference))
             {

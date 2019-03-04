@@ -1,7 +1,6 @@
 ﻿namespace ShortRefs.Domain.Services
 {
     using System;
-    using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -22,11 +21,6 @@
             this.sequenceCounterRepository = sequenceCounterRepository ?? throw new ArgumentNullException(nameof(sequenceCounterRepository));
             this.referenceRepository = referenceRepository ?? throw new ArgumentNullException(nameof(referenceRepository));
             this.referenceEncoder = referenceEncoder ?? throw new ArgumentNullException(nameof(referenceEncoder));
-        }
-
-        public async Task<IReadOnlyCollection<Reference>> FindAsync(ReferenceQuery query, CancellationToken cancellationToken)
-        {
-            return await this.referenceRepository.FindAsync(query, cancellationToken);
         }
 
         public async Task<string> GetOriginalReferenceAsync(string shortReference, CancellationToken cancellationToken)
@@ -50,7 +44,7 @@
             return reference.Original;
         }
 
-        public async Task<Reference> CreateReferenceAsync(string originalReference, CancellationToken cancellationToken)
+        public async Task<Reference> CreateReferenceAsync(string originalReference, Guid ownerId, CancellationToken cancellationToken)
         {
             if (originalReference == null)
             {
@@ -63,7 +57,8 @@
                 Reference.CreateNew(
                     nextId,
                     originalReference,
-                    x => this.referenceEncoder.Encode(x));
+                    x => this.referenceEncoder.Encode(x),
+                    ownerId);
 
             await this.referenceRepository.CreateAsync(reference, cancellationToken);
 

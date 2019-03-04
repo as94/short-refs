@@ -9,6 +9,7 @@
     using Microsoft.AspNetCore.Mvc;
 
     using ShortRefs.Api.ClientModels;
+    using ShortRefs.Api.Extensions;
     using ShortRefs.Domain.Models.References;
     using ShortRefs.Domain.Repositories;
     using ShortRefs.Domain.Services;
@@ -32,7 +33,9 @@
         [HttpGet]
         public async Task<IActionResult> GetReferenceStatAsync(CancellationToken cancellationToken)
         {
-            var references = await this.referenceRepository.FindAsync(new ReferenceQuery(), cancellationToken);
+            var query = new ReferenceQuery(userId: this.User.GetUserId());
+            var references = await this.referenceRepository.FindAsync(query, cancellationToken);
+
 
             var viewModels = new ReferenceStatList
             {
@@ -40,7 +43,7 @@
                     r => new ReferenceStatItem
                     {
                         Original = r.Original,
-                        Short = r.Short,
+                        Short = this.GetFullShortReference(r.Short),
                         RedirectsCount = r.RedirectsCount
                     })
                 .ToArray()
@@ -74,15 +77,22 @@
                 return this.BadRequest($"The reference '{referenceCreate.Reference}' already exists");
             }
 
-            var reference = await this.referenceService.CreateReferenceAsync(referenceCreate.Reference, cancellationToken);
+            var userId = this.User.GetUserId();
+            var reference = await this.referenceService.CreateReferenceAsync(referenceCreate.Reference, userId, cancellationToken);
 
             var viewModel = new ReferenceCreateResult
             {
                 Original = reference.Original,
-                Short = reference.Short
+                Short = this.GetFullShortReference(reference.Short),
             };
 
             return this.Ok(viewModel);
+        }
+
+        private string GetFullShortReference(string shortReference)
+        {
+            var request = this.HttpContext.Request;
+            return $"{request.Scheme}://{request.Host}/{shortReference}";
         }
     }
 }

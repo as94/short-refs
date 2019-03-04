@@ -1,9 +1,6 @@
 ﻿namespace ShortRefs.Domain.Models.Users
 {
     using System;
-    using System.Collections.Generic;
-
-    using ShortRefs.Domain.Models.References;
 
     public sealed class User
     {
@@ -12,13 +9,6 @@
             this.Id = id;
         }
 
-        public User(Guid id, IEnumerable<Reference> references) : this(id)
-        {
-            this.References = references ?? throw new ArgumentNullException(nameof(references));
-        }
-
         public Guid Id { get; }
-
-        public IEnumerable<Reference> References { get; } = Array.Empty<Reference>();
     }
 }

@@ -8,7 +8,6 @@ namespace ShortRefs.Domain.Services
     using System;
     using System.Text;
 
-    // TODO: add tests
     // idea from here: https://stackoverflow.com/questions/742013/how-do-i-create-a-url-shortener/742047#742047
     internal sealed class ReferenceEncoder : IReferenceEncoder
     {
