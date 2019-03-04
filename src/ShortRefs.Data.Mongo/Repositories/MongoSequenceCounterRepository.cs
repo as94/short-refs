@@ -27,7 +27,7 @@
             this.counters = this.referenceDb.GetCollection<Counter>("counters");
         }
 
-        public async Task<bool> CreateIfNotExists(string sequenceId)
+        public async Task<bool> CreateIfNotExistsAsync(string sequenceId)
         {
             if (sequenceId == null)
             {

@@ -5,7 +5,7 @@
 
     public interface ISequenceCounterRepository
     {
-        Task<bool> CreateIfNotExists(string sequenceId);
+        Task<bool> CreateIfNotExistsAsync(string sequenceId);
 
         Task<long> GetNextIdAsync(string sequenceId, CancellationToken cancellationToken);
     }
